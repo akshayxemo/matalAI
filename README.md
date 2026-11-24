@@ -1,3 +1,5 @@
+<img width="1469" height="725" alt="Screenshot 2026-11-24 at 4 29 13 PM" src="https://github.com/user-attachments/assets/0c0c5393-6442-43b3-a119-57fceb2ae613" />
+
 # MatalAI 🍸
 
 A modular Next.js / TypeScript app for a fictional tipsy chat companion. Drinks affect its personality and voice; **Sober up** brings it back over five seconds. This is a game, not a blood-alcohol calculator.

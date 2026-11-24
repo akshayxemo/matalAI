@@ -1,2 +1,41 @@
-export type ChatMessage={role:'user'|'assistant'|'system';content:string};
-export async function generateChat(messages:ChatMessage[]){const provider=process.env.LLM_PROVIDER||'ollama';if(provider==='ollama'){const base=(process.env.OLLAMA_BASE_URL||'http://127.0.0.1:11434').replace(/\/$/,'');const res=await fetch(`${base}/api/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:process.env.OLLAMA_MODEL||'llama3.2:3b',messages,stream:false}),signal:AbortSignal.timeout(180000)});if(!res.ok)throw new Error('Ollama could not generate a response. Check that the configured model is installed.');const data=await res.json();if(typeof data.message?.content!=='string')throw new Error('Invalid model response.');return data.message.content as string;}if(provider!=='openai-compatible'||!process.env.LLM_BASE_URL||!process.env.LLM_API_KEY||!process.env.LLM_MODEL)throw new Error('Hosted model settings are incomplete.');const res=await fetch(`${process.env.LLM_BASE_URL.replace(/\/$/,'')}/chat/completions`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${process.env.LLM_API_KEY}`},body:JSON.stringify({model:process.env.LLM_MODEL,messages}),signal:AbortSignal.timeout(60000)});if(!res.ok)throw new Error(`Model provider returned ${res.status}. Check settings and quota.`);const data=await res.json();const text=data.choices?.[0]?.message?.content;if(typeof text!=='string')throw new Error('Invalid model response.');return text as string;}
+import { readSettings } from "@/lib/config/settings";
+export type ChatMessage = {
+  role: "user" | "assistant" | "system";
+  content: string;
+};
+export async function generateChat(messages: ChatMessage[]) {
+  const s = await readSettings();
+  const ollama = s.chatProvider === "ollama";
+  const base = (
+    s.chatProvider === "openai" ? "https://api.openai.com/v1" : s.chatBase
+  ).replace(/\/$/, "");
+  const res = await fetch(
+    `${base}${ollama ? "/api/chat" : "/chat/completions"}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(!ollama && s.chatKey
+          ? { Authorization: `Bearer ${s.chatKey}` }
+          : {}),
+      },
+      body: JSON.stringify({
+        model: s.chatModel,
+        messages,
+        ...(ollama ? { stream: false } : {}),
+      }),
+      signal: AbortSignal.timeout(180000),
+    },
+  );
+  if (!res.ok)
+    throw new Error(
+      `Chat provider returned ${res.status}. Check the model, server and credentials.`,
+    );
+  const data = await res.json();
+  const text = ollama
+    ? data.message?.content
+    : data.choices?.[0]?.message?.content;
+  if (typeof text !== "string")
+    throw new Error("The chat provider returned an invalid response.");
+  return text as string;
+}

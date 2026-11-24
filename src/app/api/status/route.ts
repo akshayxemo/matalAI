@@ -1,3 +1,35 @@
-import {speechMode} from '@/lib/providers/speech';
-export const dynamic='force-dynamic';
-export async function GET(){if(process.env.LLM_PROVIDER==='openai-compatible')return Response.json({voiceMode:speechMode(),online:!!(process.env.LLM_BASE_URL&&process.env.LLM_API_KEY&&process.env.LLM_MODEL),model:process.env.LLM_MODEL||'hosted model',provider:'hosted'});const model=process.env.OLLAMA_MODEL||'llama3.2:3b';try{const res=await fetch(`${(process.env.OLLAMA_BASE_URL||'http://127.0.0.1:11434').replace(/\/$/,'')}/api/tags`,{cache:'no-store',signal:AbortSignal.timeout(3000)});const data=await res.json();return Response.json({voiceMode:speechMode(),online:res.ok&&data.models?.some((m:{name:string})=>m.name===model||m.name===`${model}:latest`),model,provider:'ollama'});}catch{return Response.json({voiceMode:speechMode(),online:false,model,provider:'ollama'});}}
+import { readSettings } from "@/lib/config/settings";
+import { snapshot } from "@/lib/providers/voice";
+export const dynamic = "force-dynamic";
+export async function GET() {
+  const s = await readSettings();
+  let online = false;
+  try {
+    const base = (
+      s.chatProvider === "openai" ? "https://api.openai.com/v1" : s.chatBase
+    ).replace(/\/$/, "");
+    const res = await fetch(
+      `${base}${s.chatProvider === "ollama" ? "/api/tags" : "/models"}`,
+      {
+        headers: s.chatKey ? { Authorization: `Bearer ${s.chatKey}` } : {},
+        cache: "no-store",
+        signal: AbortSignal.timeout(3000),
+      },
+    );
+    const data = await res.json();
+    online =
+      res.ok &&
+      (s.chatProvider !== "ollama" ||
+        data.models?.some(
+          (m: { name: string }) =>
+            m.name === s.chatModel || m.name === `${s.chatModel}:latest`,
+        ));
+  } catch {}
+  return Response.json({
+    online,
+    model: s.chatModel,
+    provider: s.chatProvider,
+    voiceMode: "local",
+    voice: snapshot(s),
+  });
+}

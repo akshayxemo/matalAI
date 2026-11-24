@@ -165,6 +165,10 @@ python3.12 -m venv ~/.matalai-voice-venv
 
 The command may be available as `python -m mlx_audio.server` depending on package version. Choose **Local expressive · MLX Audio** in settings. The model defaults to `mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-6bit`; male/female profiles default to Ryan and Vivian. Model compatibility, download size, speed, and voice quality depend on hardware and package version. The model can vary tone and pacing, but convincing drunk articulation is not guaranteed. For lighter operation select **Mac system voice**. Browser speech is available as a fallback in the existing client, but selection for non-macOS hosts is not yet exposed in the settings UI.
 
+## Environment defaults
+
+You do not need an environment file for the standard setup. To change the initial Ollama address or model, copy `.env.example` to `.env.local` and edit `OLLAMA_BASE_URL` or `OLLAMA_MODEL`, then restart the app. Values saved through Settings take precedence over these defaults; change the saved values in Settings if a `.env.local` change does not appear. Configure hosted chat and voice providers and their API keys in Settings rather than `.env.local`. Never commit credentials.
+
 ## Optional providers
 
 Chat settings support Ollama, OpenAI-compatible endpoints, and OpenAI. Save settings before using **Test saved chat settings**; Ollama model discovery populates the model selector. Voice settings are independent: select MLX Audio, Mac system voice, or ElevenLabs. For ElevenLabs, add an API key and accessible male/female voice IDs. **Test saved voice settings** validates account access and attempts to list available voices. ElevenLabs calls can consume credits and have account-specific model/voice restrictions; check [current pricing](https://elevenlabs.io/pricing) before use. The integration sends response text and style tags to ElevenLabs and has not been tested against a real key in this environment.
@@ -172,6 +176,8 @@ Chat settings support Ollama, OpenAI-compatible endpoints, and OpenAI. Save sett
 Settings are stored in `~/.matalai/settings.json` on macOS and `%USERPROFILE%\.matalai\settings.json` on Windows. On macOS the app requests owner-only file permissions; Windows permissions are governed by the user profile and its ACLs. API keys are never returned to the UI or stored in the project. The gear interface only accepts settings changes from a same-origin localhost request; it is intended for one user on a local machine. Leave a key blank when editing to retain it or check its removal option. Do not paste secrets into chat, Git, or public screenshots.
 
 ## Architecture and limitations
+
+For the full data flow, refresh behavior, settings storage and security boundaries, see [ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 `src/lib/providers/chat.ts` adapts chat APIs. `src/lib/providers/voice.ts` dispatches MLX, ElevenLabs, and system voice requests. `src/lib/config/settings.ts` owns local configuration; `src/app/api` keeps credentials on the server. Drink scoring, persona prompts, and speech cleanup are separate engines. Each newly generated response captures its level and voice provider/profile; audio is created only when Listen is pressed. Voice server/model URLs and credentials are current global settings, so changing them may affect uncached older replies. Hosted or self-hosted deployments need secure authentication, a server-side secret store, CSRF protection, outbound URL restrictions, shared rate limiting and spending controls. The local settings UI deliberately does not support remote management, and local Ollama/MLX addresses on a developer laptop will not automatically be reachable from a hosted server. Do not expose this personal server publicly without additional security work.
 

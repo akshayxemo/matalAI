@@ -7,25 +7,30 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.cjs"
+    "test": "node --test tests/*.cjs",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/*.cjs\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/*.cjs\""
   },
   "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "motion": "^12.0.0",
     "next": "^16.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "motion": "^12.0.0",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^3.0.0",
-    "lucide-react": "^0.468.0"
+    "tailwind-merge": "^3.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "postcss": "^8.0.0",
+    "prettier": "^3.10.1",
     "tailwindcss": "^4.0.0",
-    "@tailwindcss/postcss": "^4.0.0",
-    "postcss": "^8.0.0"
-  }
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "author": "akshayxemo"
 }
